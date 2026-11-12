@@ -21,8 +21,11 @@ Independently selectable presets for repositories that adopt this policy:
 - `ruby-images` pins digests for `dhi.io/ruby` and `ghcr.io/zewelor/ruby`
   and enables automerge for `digest` updates. It does not enable automerge for
   the initial `pinDigest` or set tag-update policy; inherited and local rules
-  still apply. Keep merge method, schedules and exceptions in each project.
-  Verify CI for both build and runtime images, including separate updates.
+  still apply. Digest automerge uses `branch` as the shared default, so Ruby
+  image updates follow the same process across projects. Override it locally
+  when a repository has a specific reason to use another method. Keep schedules
+  and other project exceptions local. Verify CI for both build and runtime
+  images, including separate updates.
 
 ## Using the presets
 

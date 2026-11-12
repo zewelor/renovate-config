@@ -43,9 +43,12 @@ for (const packageName of ['dhi.io/ruby', 'ghcr.io/zewelor/ruby']) {
     const result = await apply(rubyImages, { datasource: 'docker', packageName, depName: packageName, updateType });
     assert.equal(result.pinDigests, true, `${packageName} pinning`);
     assert.equal(result.automerge, updateType === 'digest', `${packageName} ${updateType}`);
+    assert.equal(result.automergeType, updateType === 'digest' ? 'branch' : undefined, `${packageName} ${updateType} merge type`);
   }
   const local = await applyPackageRules({ datasource: 'docker', packageName, depName: packageName, updateType: 'digest', packageRules: [...rubyImages.packageRules, { matchPackageNames: [packageName], automerge: false }] });
   assert.equal(local.automerge, false, `${packageName} local exception`);
+  const localMergeType = await applyPackageRules({ datasource: 'docker', packageName, depName: packageName, updateType: 'digest', packageRules: [...rubyImages.packageRules, { matchPackageNames: [packageName], automergeType: 'pr' }] });
+  assert.equal(localMergeType.automergeType, 'pr', `${packageName} local merge type exception`);
 }
 for (const dep of [
   { datasource: 'docker', packageName: 'ghcr.io/zewelor/ruby-other', depName: 'ghcr.io/zewelor/ruby-other' },

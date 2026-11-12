@@ -12,7 +12,8 @@
       "matchDatasources": ["docker"],
       "matchPackageNames": ["dhi.io/ruby", "ghcr.io/zewelor/ruby"],
       "matchUpdateTypes": ["digest"],
-      "automerge": true
+      "automerge": true,
+      "automergeType": "branch"
     }
   ]
 }
