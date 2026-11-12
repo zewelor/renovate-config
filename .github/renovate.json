@@ -1,0 +1,6 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "github>zewelor/renovate-config//presets/github-actions"],
+  "enabledManagers": ["github-actions"],
+  "platformAutomerge": false
+}

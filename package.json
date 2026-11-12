@@ -1,0 +1,10 @@
+{
+  "name": "zewelor-renovate-config",
+  "private": true,
+  "scripts": {
+    "test": "renovate-config-validator --strict --no-global .github/renovate.json presets/github-actions.json presets/go.json && node tests/policy.mjs"
+  },
+  "devDependencies": {
+    "renovate": "44.222.6"
+  }
+}
