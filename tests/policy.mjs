@@ -54,8 +54,8 @@ for (const packageName of ['dhi.io/ruby', 'ghcr.io/zewelor/ruby']) {
   for (const updateType of ['digest', 'pinDigest', 'patch', 'minor', 'major']) {
     const result = await apply(rubyImages, { datasource: 'docker', packageName, depName: packageName, updateType });
     assert.equal(result.pinDigests, true, `${packageName} pinning`);
-    assert.equal(result.automerge, updateType === 'digest', `${packageName} ${updateType}`);
-    assert.equal(result.automergeType, updateType === 'digest' ? 'branch' : undefined, `${packageName} ${updateType} merge type`);
+    assert.equal(result.automerge, ['digest', 'patch'].includes(updateType), `${packageName} ${updateType}`);
+    assert.equal(result.automergeType, ['digest', 'patch'].includes(updateType) ? 'branch' : undefined, `${packageName} ${updateType} merge type`);
   }
   const local = await applyPackageRules({ datasource: 'docker', packageName, depName: packageName, updateType: 'digest', packageRules: [...rubyImages.packageRules, { matchPackageNames: [packageName], automerge: false }] });
   assert.equal(local.automerge, false, `${packageName} local exception`);

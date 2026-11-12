@@ -8,10 +8,10 @@
       "pinDigests": true
     },
     {
-      "description": "Automerge Ruby image digest updates after required checks",
+      "description": "Automerge Ruby image digest and patch updates after required checks",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["dhi.io/ruby", "ghcr.io/zewelor/ruby"],
-      "matchUpdateTypes": ["digest"],
+      "matchUpdateTypes": ["digest", "patch"],
       "automerge": true,
       "automergeType": "branch"
     }
