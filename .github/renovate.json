@@ -2,5 +2,15 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", "github>zewelor/renovate-config//presets/github-actions"],
   "enabledManagers": ["github-actions", "npm"],
-  "platformAutomerge": false
+  "platformAutomerge": false,
+  "packageRules": [
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["renovate"],
+      "rangeStrategy": "update-lockfile",
+      "schedule": ["* * * * 1"],
+      "updateNotScheduled": false,
+      "automerge": true
+    }
+  ]
 }

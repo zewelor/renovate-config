@@ -10,8 +10,20 @@ const actions = JSON.parse(await readFile(new URL('../presets/github-actions.jso
 const go = JSON.parse(await readFile(new URL('../presets/go.json', import.meta.url)));
 const rubyImages = JSON.parse(await readFile(new URL('../presets/ruby-images.json', import.meta.url)));
 const rubyVersion = JSON.parse(await readFile(new URL('../presets/ruby-version.json', import.meta.url)));
+const repoConfig = JSON.parse(await readFile(new URL('../.github/renovate.json', import.meta.url)));
 const { extractPackageFile } = await import(pathToFileURL(`${root}/dist/modules/manager/custom/regex/index.js`));
 const apply = (preset, dep) => applyPackageRules({ automerge: false, ...dep, packageRules: preset.packageRules });
+
+for (const updateType of ['minor', 'patch', 'major']) {
+  const dep = { manager: 'npm', datasource: 'npm', packageName: 'renovate', depName: 'renovate', updateType };
+  const result = await apply(repoConfig, dep);
+  assert.equal(result.automerge, true, `renovate ${updateType}`);
+  assert.equal(result.rangeStrategy, 'update-lockfile', `renovate ${updateType} range strategy`);
+}
+for (const dep of [
+  { manager: 'npm', datasource: 'npm', packageName: 'another-package', depName: 'another-package' },
+  { manager: 'github-actions', datasource: 'github-tags', packageName: 'renovate', depName: 'renovate' },
+]) assert.equal((await apply(repoConfig, { ...dep, updateType: 'minor' })).automerge, false, JSON.stringify(dep));
 
 for (const updateType of ['major', 'minor', 'patch', 'pin', 'digest']) {
   const result = await apply(actions, { manager: 'github-actions', depType: 'action', depName: 'actions/checkout', updateType });
