@@ -8,6 +8,9 @@ const root = process.env.RENOVATE_ROOT ?? require.resolve('renovate/package.json
 const { applyPackageRules } = await import(pathToFileURL(`${root}/dist/util/package-rules/index.js`));
 const actions = JSON.parse(await readFile(new URL('../presets/github-actions.json', import.meta.url)));
 const go = JSON.parse(await readFile(new URL('../presets/go.json', import.meta.url)));
+const rubyImages = JSON.parse(await readFile(new URL('../presets/ruby-images.json', import.meta.url)));
+const rubyVersion = JSON.parse(await readFile(new URL('../presets/ruby-version.json', import.meta.url)));
+const { extractPackageFile } = await import(pathToFileURL(`${root}/dist/modules/manager/custom/regex/index.js`));
 const apply = (preset, dep) => applyPackageRules({ automerge: false, ...dep, packageRules: preset.packageRules });
 
 for (const updateType of ['major', 'minor', 'patch', 'pin', 'digest']) {
@@ -35,4 +38,35 @@ assert.equal((await apply(go, { manager: 'gomod', depType: 'toolchain', depName:
 assert.equal((await apply(go, { manager: 'gomod', depType: 'require', depName: 'example.com/go' })).groupName, undefined);
 const exception = await applyPackageRules({ manager: 'github-actions', depType: 'action', depName: 'actions/checkout', packageName: 'actions/checkout', packageRules: [...actions.packageRules, { matchPackageNames: ['actions/checkout'], automerge: false }] });
 assert.equal(exception.automerge, false, 'a later local exception overrides the preset');
+for (const packageName of ['dhi.io/ruby', 'ghcr.io/zewelor/ruby']) {
+  for (const updateType of ['digest', 'pinDigest', 'patch', 'minor', 'major']) {
+    const result = await apply(rubyImages, { datasource: 'docker', packageName, depName: packageName, updateType });
+    assert.equal(result.pinDigests, true, `${packageName} pinning`);
+    assert.equal(result.automerge, updateType === 'digest', `${packageName} ${updateType}`);
+  }
+  const local = await applyPackageRules({ datasource: 'docker', packageName, depName: packageName, updateType: 'digest', packageRules: [...rubyImages.packageRules, { matchPackageNames: [packageName], automerge: false }] });
+  assert.equal(local.automerge, false, `${packageName} local exception`);
+}
+for (const dep of [
+  { datasource: 'docker', packageName: 'ghcr.io/zewelor/ruby-other', depName: 'ghcr.io/zewelor/ruby-other' },
+  { datasource: 'docker', packageName: 'ruby', depName: 'ruby' },
+  { datasource: 'npm', packageName: 'dhi.io/ruby', depName: 'dhi.io/ruby' },
+]) {
+  const result = await apply(rubyImages, { ...dep, updateType: 'digest' });
+  assert.equal(result.automerge, false, JSON.stringify(dep));
+  assert.equal(result.pinDigests, undefined, JSON.stringify(dep));
+}
+const rubyManager = rubyVersion.customManagers[0];
+assert.equal(rubyVersion['ruby-version'].enabled, false);
+for (const input of ['3.4.7\n', '3.4.7']) {
+  const { deps } = extractPackageFile(input, '.ruby-version', rubyManager);
+  assert.equal(deps.length, 1);
+  assert.equal(deps[0].currentValue, '3.4.7');
+  assert.equal(deps[0].depName, 'docker.io/library/ruby');
+  assert.equal(deps[0].datasource, 'docker');
+  assert.equal(deps[0].versioning, 'docker');
+}
+for (const input of ['ruby-3.4.7\n', '3.4\n', '3.4.7\nother=3.4.7\n']) {
+  assert.equal(extractPackageFile(input, '.ruby-version', rubyManager), null, input);
+}
 console.log('Policy cases passed');

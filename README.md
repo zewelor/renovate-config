@@ -1,6 +1,6 @@
 # Shared Renovate presets
 
-Two independently selectable presets for repositories that adopt this policy:
+Independently selectable presets for repositories that adopt this policy:
 
 - `github-actions` enables automerge for dependencies extracted by the
   `github-actions` manager as `action`, including major updates. It does not
@@ -11,6 +11,18 @@ Two independently selectable presets for repositories that adopt this policy:
   `gomodTidy`. This raises a module's minimum supported Go version when the
   directive is updated. Grouping combines available compatible updates; it
   does not make all declarations update at the same time.
+- `ruby-version` replaces the built-in `.ruby-version` manager with the R3x
+  regex manager for a root-level file containing a numeric `major.minor.patch`
+  version. It looks up `docker.io/library/ruby` using Docker versioning. Check
+  whether availability of that image is an appropriate signal: DHI or custom
+  Ruby images for the same version may not yet be available. Keep any project
+  synchronization workflow and tag exceptions locally. If `enabledManagers`
+  is restricted, include `custom.regex`.
+- `ruby-images` pins digests for `dhi.io/ruby` and `ghcr.io/zewelor/ruby`
+  and enables automerge for `digest` updates. It does not enable automerge for
+  the initial `pinDigest` or set tag-update policy; inherited and local rules
+  still apply. Keep merge method, schedules and exceptions in each project.
+  Verify CI for both build and runtime images, including separate updates.
 
 ## Using the presets
 
@@ -22,7 +34,9 @@ entry point. By default, follow the preset repository's default branch:
   "extends": [
     "config:recommended",
     "github>zewelor/renovate-config//presets/github-actions",
-    "github>zewelor/renovate-config//presets/go"
+    "github>zewelor/renovate-config//presets/go",
+    "github>zewelor/renovate-config//presets/ruby-version",
+    "github>zewelor/renovate-config//presets/ruby-images"
   ]
 }
 ```
@@ -67,13 +81,14 @@ npm ci
 npm test
 ```
 
-The validator checks both presets but does not resolve
+The validator checks the presets but does not resolve
 remote references. Run a Renovate extraction dry-run and inspect the resolved
 configuration and logs to verify an `extends` reference; a successful validator
 exit alone is insufficient. The policy tests exercise Renovate's
-package-rule engine for actions, non-actions, Go declarations and a local
-exception. These tests use a pinned Renovate version and its internal rule
-engine; update the tests when changing that version. These focused tests use
+package-rule engine for actions, non-actions, Go declarations, Ruby images and
+local exceptions, plus Ruby version extraction. These tests use a pinned
+Renovate version and its internal rule engine; update the tests when changing
+that version. These focused tests use
 representative dependency metadata rather than running a full bot update.
 Validation is not proof of hosted bot behavior. In each consumer also validate resolved `extends`,
 extract actual dependencies, compare effective policies, exercise version

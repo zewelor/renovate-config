@@ -1,0 +1,18 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "packageRules": [
+    {
+      "description": "Pin Ruby image digests",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["dhi.io/ruby", "ghcr.io/zewelor/ruby"],
+      "pinDigests": true
+    },
+    {
+      "description": "Automerge Ruby image digest updates after required checks",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["dhi.io/ruby", "ghcr.io/zewelor/ruby"],
+      "matchUpdateTypes": ["digest"],
+      "automerge": true
+    }
+  ]
+}
