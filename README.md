@@ -27,10 +27,9 @@ keep one repository configuration entry point. For example:
 }
 ```
 
-The tag reference above is intended for the first release. Do not use it until
-that tag is published and the consumer resolves it successfully. Release a new
-immutable version tag for each reviewed preset change, never move an existing
-tag; update consumers through reviewed Renovate PRs or a deliberate edit.
+Use a published tag and verify that the consumer resolves it successfully.
+Release a new immutable version tag for each reviewed preset change; never move
+an existing tag; update consumers through reviewed Renovate PRs or a deliberate edit.
 Unpinned references follow the default branch and change all consumers at once.
 
 Presets in `extends` are resolved in order; local settings apply afterwards.
@@ -56,11 +55,14 @@ With a supported Node version (Renovate 44.222.6 requires Node 24.11+ in the
 24.x line or 26.13+ in the 26.x line):
 
 ```sh
-npm install
+npm ci
 npm test
 ```
 
-The validator checks both presets, and the policy tests exercise Renovate's
+The validator checks both presets and example schemas but does not resolve
+remote references. Run a Renovate extraction dry-run and inspect the resolved
+configuration and logs to verify an `extends` reference; a successful validator
+exit alone is insufficient. The policy tests exercise Renovate's
 package-rule engine for actions, non-actions, Go declarations and a local
 exception. These tests use a pinned Renovate version and its internal rule
 engine; update the tests when changing that version. Validation is not proof
@@ -68,7 +70,9 @@ of hosted bot behavior. In each consumer also validate resolved `extends`,
 extract actual dependencies, compare effective policies, exercise version
 replacements and verify CI and required checks. Record hosted bot evidence
 separately. The pilot examples in `examples/` are starting points, not evidence
-of installation or activation.
+of installation or activation. The Garmin example deliberately preserves its
+existing broad manager-level automerge as a local exception; review that
+policy and its required checks before adopting it.
 
 ## Migration scope
 

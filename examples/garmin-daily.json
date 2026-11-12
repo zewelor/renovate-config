@@ -4,7 +4,7 @@
   "automerge": false,
   "platformAutomerge": false,
   "packageRules": [
-    {"description": "Preserve existing automerge for other workflow dependencies", "matchManagers": ["github-actions"], "matchDepTypes": ["workflow", "docker", "container", "service", "github-runner", "uses-with"], "automerge": true},
+    {"description": "Preserve existing broad GitHub Actions manager automerge", "matchManagers": ["github-actions"], "automerge": true},
     {"description": "Automerge non-major Go module and toolchain updates", "matchManagers": ["gomod"], "matchUpdateTypes": ["minor", "patch", "digest"], "automerge": true},
     {"description": "Automerge non-major Go build image updates", "matchManagers": ["dockerfile"], "matchPackageNames": ["golang"], "matchUpdateTypes": ["minor", "patch", "digest"], "automerge": true},
     {"description": "Check the development PostgreSQL image weekly", "matchManagers": ["docker-compose"], "matchPackageNames": ["postgres"], "schedule": ["* * * * 0"]},
