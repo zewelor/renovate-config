@@ -60,8 +60,7 @@ Do not add version declarations solely to make a group.
 ## Validation
 
 GitHub Actions runs the same checks on pushes and pull requests. To run them
-locally with a supported Node version (Renovate 44.222.6 requires Node 24.11+ in the
-24.x line or 26.13+ in the 26.x line):
+locally with a Node version supported by the Renovate dependency:
 
 ```sh
 npm ci
