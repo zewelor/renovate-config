@@ -1,0 +1,19 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "customDatasources": {
+    "k3sStable": {
+      "defaultRegistryUrlTemplate": "https://update.k3s.io/v1-release/channels",
+      "format": "json",
+      "transformTemplates": [
+        "{\"releases\":[{\"version\": $$.(data[id = 'stable'].latest),\"sourceUrl\":\"https://github.com/k3s-io/k3s\",\"changelogUrl\":$join([\"https://github.com/k3s-io/k3s/releases/tag/\",data[id = 'stable'].latest])}],\"homepage\":\"https://k3s.io/\",\"sourceUrl\":\"https://github.com/k3s-io/k3s\"}"
+      ]
+    }
+  },
+  "packageRules": [
+    {
+      "description": "The K3s stable datasource does not provide a release timestamp",
+      "matchDatasources": ["custom.k3sStable"],
+      "minimumReleaseAge": null
+    }
+  ]
+}

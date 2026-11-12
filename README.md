@@ -18,6 +18,11 @@ Independently selectable presets for repositories that adopt this policy:
   Ruby images for the same version may not yet be available. Keep any project
   synchronization workflow and tag exceptions locally. If `enabledManagers`
   is restricted, include `custom.regex`.
+- `k3s-stable` defines the `custom.k3sStable` datasource from the K3s stable
+  channel and disables minimum release age for it because the channel does not
+  provide release timestamps. Consumers define their own managers, version
+  parsing, schedules and automerge rules. Availability in this channel does not
+  by itself verify compatibility with a project's deployment.
 - `ruby-images` pins digests for `dhi.io/ruby` and `ghcr.io/zewelor/ruby`
   and enables automerge for `digest` updates. It does not enable automerge for
   the initial `pinDigest` or set tag-update policy; inherited and local rules
@@ -38,6 +43,7 @@ entry point. By default, follow the preset repository's default branch:
     "config:recommended",
     "github>zewelor/renovate-config//presets/github-actions",
     "github>zewelor/renovate-config//presets/go",
+    "github>zewelor/renovate-config//presets/k3s-stable",
     "github>zewelor/renovate-config//presets/ruby-version",
     "github>zewelor/renovate-config//presets/ruby-images"
   ]
@@ -91,7 +97,8 @@ exit alone is insufficient. The policy tests exercise Renovate's
 package-rule engine for actions, non-actions, Go declarations, Ruby images and
 local exceptions, plus Ruby version extraction. These tests use a pinned
 Renovate version and its internal rule engine; update the tests when changing
-that version. These focused tests use
+that version. The K3s test also exercises the channel response transformation.
+These focused tests use
 representative dependency metadata rather than running a full bot update.
 Validation is not proof of hosted bot behavior. In each consumer also validate resolved `extends`,
 extract actual dependencies, compare effective policies, exercise version
