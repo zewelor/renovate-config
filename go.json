@@ -1,0 +1,18 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "postUpdateOptions": ["gomodTidy"],
+  "packageRules": [
+    {
+      "description": "Group Go toolchain, build image and CI updates",
+      "matchDepNames": ["go", "golang", "docker.io/library/golang"],
+      "groupName": "Go toolchain"
+    },
+    {
+      "description": "Update the minimum Go version in go.mod",
+      "matchManagers": ["gomod"],
+      "matchDepNames": ["go"],
+      "matchDepTypes": ["golang"],
+      "rangeStrategy": "bump"
+    }
+  ]
+}

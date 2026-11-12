@@ -1,0 +1,13 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "docker:pinDigests", "github>zewelor/renovate-config:github-actions#v1.0.0", "github>zewelor/renovate-config:go#v1.0.0"],
+  "automerge": false,
+  "platformAutomerge": false,
+  "packageRules": [
+    {"description": "Preserve existing automerge for other workflow dependencies", "matchManagers": ["github-actions"], "matchDepTypes": ["workflow", "docker", "container", "service", "github-runner", "uses-with"], "automerge": true},
+    {"description": "Automerge non-major Go module and toolchain updates", "matchManagers": ["gomod"], "matchUpdateTypes": ["minor", "patch", "digest"], "automerge": true},
+    {"description": "Automerge non-major Go build image updates", "matchManagers": ["dockerfile"], "matchPackageNames": ["golang"], "matchUpdateTypes": ["minor", "patch", "digest"], "automerge": true},
+    {"description": "Check the development PostgreSQL image weekly", "matchManagers": ["docker-compose"], "matchPackageNames": ["postgres"], "schedule": ["* * * * 0"]},
+    {"description": "Automerge PostgreSQL digest updates", "matchManagers": ["docker-compose"], "matchPackageNames": ["postgres"], "matchUpdateTypes": ["digest"], "automerge": true}
+  ]
+}

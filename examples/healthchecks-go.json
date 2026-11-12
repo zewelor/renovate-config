@@ -1,0 +1,9 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "github>zewelor/renovate-config:github-actions#v1.0.0", "github>zewelor/renovate-config:go#v1.0.0"],
+  "platformAutomerge": false,
+  "vulnerabilityAlerts": {"automerge": true},
+  "packageRules": [
+    {"matchUpdateTypes": ["minor", "patch", "pin", "digest"], "automerge": true}
+  ]
+}
