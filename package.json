@@ -2,7 +2,7 @@
   "name": "zewelor-renovate-config",
   "private": true,
   "scripts": {
-    "test": "renovate-config-validator --strict --no-global .github/renovate.json presets/github-actions.json presets/go.json presets/ruby-version.json presets/ruby-images.json presets/k3s-stable.json && node tests/policy.mjs && node tests/k3s-stable.mjs"
+    "test": "renovate-config-validator --strict --no-global .github/renovate.json presets/github-actions.json presets/go.json presets/ruby-version.json presets/ruby-images.json presets/k3s-stable.json presets/annotations.json && node tests/policy.mjs && node tests/k3s-stable.mjs && node tests/annotations.mjs"
   },
   "devDependencies": {
     "renovate": "^44.0.0"

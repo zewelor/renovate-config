@@ -1,0 +1,9 @@
+{
+  "features": {
+    "ghcr.io/devcontainers-extra/features/mise:1": {
+      // renovate: datasource=github-releases depName=jdx/mise
+      "version": "2026.11.3",
+      "unrelated": "2026.11.3"
+    }
+  }
+}

@@ -23,6 +23,12 @@ Independently selectable presets for repositories that adopt this policy:
   provide release timestamps. Consumers define their own managers, version
   parsing, schedules and automerge rules. Availability in this channel does not
   by itself verify compatibility with a project's deployment.
+- `annotations` reads version metadata from comments immediately above
+  Dockerfile `ARG`/`ENV` declarations and YAML, TOML or JSON scalars. It extends
+  Renovate's `customManagers:dockerfileVersions` for Dockerfiles and adds the
+  scalar matcher described below. Keep datasource definitions, schedules and
+  automerge rules in separate presets or local configuration. If
+  `enabledManagers` is restricted, include `custom.regex`.
 - `ruby-images` pins digests for `dhi.io/ruby` and `ghcr.io/zewelor/ruby`
   and enables automerge for `digest` and `patch` updates. It does not enable
   automerge for the initial `pinDigest`, minor or major updates; inherited and
@@ -43,6 +49,7 @@ entry point. By default, follow the preset repository's default branch:
     "config:recommended",
     "github>zewelor/renovate-config//presets/github-actions",
     "github>zewelor/renovate-config//presets/go",
+    "github>zewelor/renovate-config//presets/annotations",
     "github>zewelor/renovate-config//presets/k3s-stable",
     "github>zewelor/renovate-config//presets/ruby-version",
     "github>zewelor/renovate-config//presets/ruby-images"
@@ -80,6 +87,38 @@ runner exception. CI for Go projects should run `go mod tidy -diff` for each
 module. Neither workflow runner nor CI checks are configured by these presets.
 Do not add version declarations solely to make a group.
 
+## Version annotations
+
+Keep dependency identity and version parsing beside the version:
+
+```dockerfile
+# renovate: datasource=github-releases depName=openai/codex extractVersion=^rust-v(?<version>\d+\.\d+\.\d+)$
+ARG CODEX_VERSION=0.167.0
+```
+
+```yaml
+# renovate: datasource=docker depName=adguard/adguardhome
+adguardhome_docker_version: "v0.107.79"
+```
+
+The scalar matcher scans `*.yml`, `*.yaml`, `*.toml`, `*.json`, `*.json5` and
+`*.jsonc`. Put a `# renovate:` or `// renovate:` comment on its own line,
+immediately above the assignment. The required fields are `datasource` and
+`depName`, followed optionally by `versioning` and `extractVersion`, in that
+order. Field values cannot contain whitespace. Keys use letters, digits and
+underscores, optionally quoted; values are unquoted or single/double quoted
+and cannot contain whitespace. JSON comments require a format that permits
+them, such as JSONC devcontainer files. Inline annotations are not supported.
+For Dockerfiles, use `<NAME>_VERSION` variables and the
+[upstream preset's syntax](https://docs.renovatebot.com/presets-customManagers/#custommanagersdockerfileversions).
+
+Use `extractVersion` with a named `version` capture when a release tag needs
+normalization. The stored value must already use the normalized form.
+`custom.k3sStable` annotations also need the separate `k3s-stable` preset.
+Remove the local annotation managers when adopting `annotations` so they do
+not extract the same declarations twice. Keep managers with a different
+contract, such as Grafana dashboards or an unannotated Alpine version, local.
+
 ## Validation
 
 GitHub Actions runs the same checks on pushes and pull requests. To run them
@@ -98,6 +137,11 @@ package-rule engine for actions, non-actions, Go declarations, Ruby images and
 local exceptions, plus Ruby version extraction. These tests use a pinned
 Renovate version and its internal rule engine; update the tests when changing
 that version. The K3s test also exercises the channel response transformation.
+The annotation tests resolve the inherited Dockerfile preset and exercise
+file matching, extraction metadata and isolated version replacements through
+Renovate's replacement engine, including CRLF, quoted scalars and unchanged
+unrelated values. Their fixtures cover the Ansible, Docker Images and Home
+Assistant OpenWrt annotation formats.
 These focused tests use
 representative dependency metadata rather than running a full bot update.
 Validation is not proof of hosted bot behavior. In each consumer also validate resolved `extends`,

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["customManagers:dockerfileVersions"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Read version metadata from comments immediately above YAML, TOML and JSON scalars",
+      "managerFilePatterns": [
+        "**/*.{yml,yaml,toml,json,json5,jsonc}"
+      ],
+      "matchStrings": [
+        "(?:^|\\r?\\n)[ \\t]*(?:#|//) renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?(?: extractVersion=(?<extractVersion>\\S+))?[ \\t]*\\r?\\n[ \\t]*[\"']?\\w+[\"']?[ \\t]*[=:][ \\t]*[\"']?(?<currentValue>[^\"'\\s#,}\\]]+)"
+      ]
+    }
+  ]
+}
