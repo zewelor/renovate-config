@@ -11,7 +11,7 @@ Independently selectable presets for repositories that adopt this policy:
   `gomodTidy`. This raises a module's minimum supported Go version when the
   directive is updated. Grouping combines available compatible updates; it
   does not make all declarations update at the same time.
-- `ruby-version` replaces the built-in `.ruby-version` manager with the R3x
+- `ruby-version` replaces the built-in `.ruby-version` manager with a custom
   regex manager for a root-level file containing a numeric `major.minor.patch`
   version. It looks up `docker.io/library/ruby` using Docker versioning. Check
   whether availability of that image is an appropriate signal: DHI or custom
@@ -140,26 +140,20 @@ that version. The K3s test also exercises the channel response transformation.
 The annotation tests resolve the inherited Dockerfile preset and exercise
 file matching, extraction metadata and isolated version replacements through
 Renovate's replacement engine, including CRLF, quoted scalars and unchanged
-unrelated values. Their fixtures cover the Ansible, Docker Images and Home
-Assistant OpenWrt annotation formats.
+unrelated values.
 These focused tests use
 representative dependency metadata rather than running a full bot update.
 Validation is not proof of hosted bot behavior. In each consumer also validate resolved `extends`,
 extract actual dependencies, compare effective policies, exercise version
 replacements and verify CI and required checks. Record hosted bot evidence
-separately. Review Garmin Daily’s existing broad manager-level automerge and
-its required checks before migrating that policy.
+separately. Review existing manager-level automerge and its required checks
+before migrating that policy.
 
-## Migration scope
+## Ruby image versions in CI
 
-Track implementation and per-repository evidence in [MCA-103](https://linear.app/mcagents/issue/MCA-103).
-Pilot Healthchecks Go and Garmin Daily first. Then migrate Feedway, Arrtify,
-CrumbCLI, Pastesync and Sourcetap. Examine Linkding, Marketwatch, Bird Go,
-Pingo Doce and Pushovergate as candidates; decide on bot activation separately,
-including Pushovergate's Go version constraint. For the Actions preset also
-review GitOps, Ansible, Docker Images, dot2dot, R3X, HA EEM PT, Dottales and
-PS Events. Existing correct local copies must also be replaced with the shared
-source. Preserve explicit exceptions, such as GitOps reusable workflows,
-Feedway's manager allowlist and PostgreSQL version cap, and Garmin's PostgreSQL
-schedule. Record each repository's config path, ref, exceptions, CI and bot
-status, and avoid enabling Renovate without the operator's decision.
+Prefer literal image tags and digests so Renovate's native Dockerfile manager
+can update them. If a host CI job needs the same numeric Ruby version, read it
+from the image tag rather than introducing an ARG and a custom image updater
+solely for that job. Keep the parser local to the consumer's Dockerfile format.
+Matching the Ruby version number does not reproduce the image's operating
+system or native libraries; use container builds and tests for those guarantees.
