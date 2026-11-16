@@ -121,8 +121,10 @@ contract, such as Grafana dashboards or an unannotated Alpine version, local.
 
 ## Validation
 
-GitHub Actions runs the same checks on pushes and pull requests. To run them
-locally with a Node version supported by the Renovate dependency:
+GitHub Actions runs checks on pushes and pull requests. For same-repository
+Renovate PR events initiated by Renovate, the branch push supplies the checks;
+human-initiated PR events still run them. To run the checks locally with a Node
+version supported by the Renovate dependency:
 
 ```sh
 npm ci

@@ -9,6 +9,13 @@ permissions:
 
 jobs:
   test:
+    # Renovate branch pushes already run these checks before the PR is opened.
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name != github.repository ||
+      github.event.pull_request.user.login != 'renovate[bot]' ||
+      github.triggering_actor != 'renovate[bot]' ||
+      !startsWith(github.head_ref, 'renovate/')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
