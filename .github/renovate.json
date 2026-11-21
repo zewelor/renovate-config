@@ -1,7 +1,26 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", "github>zewelor/renovate-config//presets/github-actions"],
-  "enabledManagers": ["github-actions", "npm"],
+  "enabledManagers": ["github-actions", "npm", "custom.regex"],
+  "customDatasources": {
+    "nginxStable": {
+      "defaultRegistryUrlTemplate": "https://raw.githubusercontent.com/nginx/nginx.org/main/xml/versions.xml",
+      "format": "plain",
+      "transformTemplates": [
+        "($stable := $match($join(releases.version, ' '), /<download\\s+tag=\"stable\"\\s+changes=\"([0-9]+\\.[0-9]+)\"\\s*>/); $assert($count($stable) = 1, 'Expected exactly one NGINX Stable line'); {\"releases\": [{\"version\": $stable.groups[0]}], \"homepage\": \"https://nginx.org/en/download.html\"})"
+      ]
+    }
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^presets/nginx-stable\\.json$/"],
+      "matchStrings": ["\"allowedVersions\"\\s*:\\s*\"[^\"\\r\\n]+ '(?<currentValue>[0-9]+\\.[0-9]+)'"],
+      "depNameTemplate": "nginx-stable",
+      "datasourceTemplate": "custom.nginxStable",
+      "versioningTemplate": "semver-coerced"
+    }
+  ],
   "platformAutomerge": false,
   "packageRules": [
     {

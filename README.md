@@ -23,6 +23,9 @@ Independently selectable presets for repositories that adopt this policy:
   provide release timestamps. Consumers define their own managers, version
   parsing, schedules and automerge rules. Availability in this channel does not
   by itself verify compatibility with a project's deployment.
+- `nginx-stable` follows the current NGINX Stable line for the Docker Official
+  Image `nginx` and Docker Hardened Image `dhi.io/nginx`. Docker versioning
+  preserves each image's tag variant and precision.
 - `annotations` reads version metadata from comments immediately above
   Dockerfile `ARG`/`ENV` declarations and YAML, TOML or JSON scalars. It extends
   Renovate's `customManagers:dockerfileVersions` for Dockerfiles and adds the
@@ -51,6 +54,7 @@ entry point. By default, follow the preset repository's default branch:
     "github>zewelor/renovate-config//presets/go",
     "github>zewelor/renovate-config//presets/annotations",
     "github>zewelor/renovate-config//presets/k3s-stable",
+    "github>zewelor/renovate-config//presets/nginx-stable",
     "github>zewelor/renovate-config//presets/ruby-version",
     "github>zewelor/renovate-config//presets/ruby-images"
   ]
@@ -86,6 +90,21 @@ Use `ubuntu-latest` in workflows unless a specific requirement justifies a
 runner exception. CI for Go projects should run `go mod tidy -diff` for each
 module. Neither workflow runner nor CI checks are configured by these presets.
 Do not add version declarations solely to make a group.
+
+## NGINX Stable images
+
+Use a numeric tag with the variant you need. For example, `1.30.6-alpine`
+can update to `1.30.7-alpine` when that tag appears in the same registry.
+A plain `1.30.6` waits for a plain newer tag. Keep registry authentication,
+digest pinning and automerge policy in the consuming repository. Remove the
+old local version filter when adopting the preset.
+
+Renovate in this repository reads the Stable line from the
+[NGINX versions file](https://github.com/nginx/nginx.org/blob/main/xml/versions.xml)
+and opens a PR to update the preset when that line changes. Before merging
+that PR, check that the new line has a published tag for the variants in use.
+Check the [Docker Official Image manifest](https://github.com/docker-library/official-images/blob/master/library/nginx)
+or the [DHI tag log](https://github.com/docker-hardened-images/log/tree/main/dhi/nginx).
 
 ## Version annotations
 
@@ -139,6 +158,8 @@ package-rule engine for actions, non-actions, Go declarations, Ruby images and
 local exceptions, plus Ruby version extraction. These tests use a pinned
 Renovate version and its internal rule engine; update the tests when changing
 that version. The K3s test also exercises the channel response transformation.
+The NGINX test exercises the Stable-line update and checks how Docker Compose
+updates resolve with different tags available in the registry.
 The annotation tests resolve the inherited Dockerfile preset and exercise
 file matching, extraction metadata and isolated version replacements through
 Renovate's replacement engine, including CRLF, quoted scalars and unchanged

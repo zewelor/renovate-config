@@ -1,0 +1,22 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "packageRules": [
+    {
+      "description": "Track the NGINX Stable line and preserve the current Docker tag variant.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "nginx",
+        "library/nginx",
+        "docker.io/nginx",
+        "docker.io/library/nginx",
+        "index.docker.io/nginx",
+        "index.docker.io/library/nginx",
+        "registry-1.docker.io/nginx",
+        "registry-1.docker.io/library/nginx",
+        "dhi.io/nginx"
+      ],
+      "versioning": "docker",
+      "allowedVersions": "/^{{{replace '[.]' '[.]' '1.30'}}}(?:[.-]|$)/"
+    }
+  ]
+}
