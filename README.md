@@ -26,6 +26,10 @@ Independently selectable presets for repositories that adopt this policy:
 - `nginx-stable` follows the current NGINX Stable line for the Docker Official
   Image `nginx` and Docker Hardened Image `dhi.io/nginx`. Docker versioning
   preserves each image's tag variant and precision.
+- `postgresql-18` keeps the Docker Official Image `postgres` (and its Docker
+  Hub registry aliases) on major version `18` (`/^18(?:[.-]|$)/`) using Docker
+  versioning so each image's tag variant and precision are preserved. Keep
+  automerge, schedule and digest pinning policies in the consuming repository.
 - `annotations` reads version metadata from comments immediately above
   Dockerfile `ARG`/`ENV` declarations and YAML, TOML or JSON scalars. It extends
   Renovate's `customManagers:dockerfileVersions` for Dockerfiles and adds the
@@ -55,6 +59,7 @@ entry point. By default, follow the preset repository's default branch:
     "github>zewelor/renovate-config//presets/annotations",
     "github>zewelor/renovate-config//presets/k3s-stable",
     "github>zewelor/renovate-config//presets/nginx-stable",
+    "github>zewelor/renovate-config//presets/postgresql-18",
     "github>zewelor/renovate-config//presets/ruby-version",
     "github>zewelor/renovate-config//presets/ruby-images"
   ]
@@ -154,8 +159,9 @@ The validator checks the presets but does not resolve
 remote references. Run a Renovate extraction dry-run and inspect the resolved
 configuration and logs to verify an `extends` reference; a successful validator
 exit alone is insufficient. The policy tests exercise Renovate's
-package-rule engine for actions, non-actions, Go declarations, Ruby images and
-local exceptions, plus Ruby version extraction. These tests use a pinned
+package-rule engine for actions, non-actions, Go declarations, Ruby images,
+PostgreSQL 18 candidate filtering and local exceptions, plus Ruby version
+extraction. These tests use a pinned
 Renovate version and its internal rule engine; update the tests when changing
 that version. The K3s test also exercises the channel response transformation.
 The NGINX test exercises the Stable-line update and checks how Docker Compose

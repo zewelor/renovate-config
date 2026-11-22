@@ -5,13 +5,20 @@ import { pathToFileURL } from 'node:url';
 
 const require = createRequire(import.meta.url);
 const root = process.env.RENOVATE_ROOT ?? require.resolve('renovate/package.json').replace(/\/package\.json$/, '');
+const { getConfig } = await import(pathToFileURL(`${root}/dist/config/defaults.js`));
+const { init } = await import(pathToFileURL(`${root}/dist/logger/index.js`));
+const { getDatasources } = await import(pathToFileURL(`${root}/dist/modules/datasource/index.js`));
+const { extractPackageFile: extractCompose } = await import(pathToFileURL(`${root}/dist/modules/manager/docker-compose/index.js`));
+const { lookupUpdates } = await import(pathToFileURL(`${root}/dist/workers/repository/process/lookup/index.js`));
 const { applyPackageRules } = await import(pathToFileURL(`${root}/dist/util/package-rules/index.js`));
 const actions = JSON.parse(await readFile(new URL('../presets/github-actions.json', import.meta.url)));
 const go = JSON.parse(await readFile(new URL('../presets/go.json', import.meta.url)));
+const postgresql18 = JSON.parse(await readFile(new URL('../presets/postgresql-18.json', import.meta.url)));
 const rubyImages = JSON.parse(await readFile(new URL('../presets/ruby-images.json', import.meta.url)));
 const rubyVersion = JSON.parse(await readFile(new URL('../presets/ruby-version.json', import.meta.url)));
 const repoConfig = JSON.parse(await readFile(new URL('../.github/renovate.json', import.meta.url)));
 const { extractPackageFile } = await import(pathToFileURL(`${root}/dist/modules/manager/custom/regex/index.js`));
+await init();
 const apply = (preset, dep) => applyPackageRules({ automerge: false, ...dep, packageRules: preset.packageRules });
 
 for (const updateType of ['minor', 'patch', 'major']) {
@@ -83,5 +90,36 @@ for (const input of ['3.4.7\n', '3.4.7']) {
 }
 for (const input of ['ruby-3.4.7\n', '3.4\n', '3.4.7\nother=3.4.7\n']) {
   assert.equal(extractPackageFile(input, '.ruby-version', rubyManager), null, input);
+}
+const pgRule = await apply(postgresql18, { datasource: 'docker', packageName: 'postgres', depName: 'postgres' });
+assert.equal(pgRule.versioning, 'docker');
+assert.equal(pgRule.allowedVersions, '/^18(?:[.-]|$)/');
+assert.equal(pgRule.automerge, false);
+assert.equal(pgRule.schedule, undefined);
+assert.equal(pgRule.pinDigests, undefined);
+const docker = getDatasources().get('docker');
+const prevGetReleases = docker.getReleases;
+const prevGetDigest = docker.getDigest;
+const pgTags = ['18', '18.7', '18.8', '19', '19.0', '181', '18-alpine', '18.7-alpine', '18-trixie', '19-alpine', '181-alpine', '18.7-trixie', '18.8-trixie', '18.8-alpine', '19.0-trixie'];
+try {
+  docker.getReleases = async () => ({ releases: pgTags.map(version => ({ version })) });
+  docker.getDigest = async () => undefined;
+  const pgUpdates = async image => {
+    const { deps: [dep] } = extractCompose(`services:\n  db:\n    image: ${image}\n`, 'compose.yaml', {});
+    const config = await applyPackageRules({ ...getConfig(), ...dep, manager: 'docker-compose', packageRules: postgresql18.packageRules });
+    const result = (await lookupUpdates(config)).unwrap().val;
+    assert.deepEqual(result.warnings, []);
+    return result.updates.map(update => update.newValue);
+  };
+  assert.deepEqual(await pgUpdates('postgres:18'), []);
+  assert.deepEqual(await pgUpdates('postgres:18-alpine'), []);
+  assert.deepEqual(await pgUpdates('postgres:18.7-trixie'), ['18.8-trixie']);
+  for (const name of ['library/postgres', 'docker.io/postgres', 'docker.io/library/postgres', 'index.docker.io/postgres', 'index.docker.io/library/postgres', 'registry-1.docker.io/postgres', 'registry-1.docker.io/library/postgres']) {
+    assert.deepEqual(await pgUpdates(`${name}:18.7-trixie`), ['18.8-trixie'], name);
+  }
+  assert.deepEqual(await pgUpdates('ghcr.io/example/postgres:18'), ['181']);
+} finally {
+  docker.getReleases = prevGetReleases;
+  docker.getDigest = prevGetDigest;
 }
 console.log('Policy cases passed');
