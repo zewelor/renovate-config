@@ -4,18 +4,17 @@
     {
       "description": "Keep PostgreSQL images on major version 18 and preserve the current Docker tag variant.",
       "matchDatasources": ["docker"],
-      "matchPackageNames": [
-        "postgres",
-        "library/postgres",
-        "docker.io/postgres",
-        "docker.io/library/postgres",
-        "index.docker.io/postgres",
-        "index.docker.io/library/postgres",
-        "registry-1.docker.io/postgres",
-        "registry-1.docker.io/library/postgres"
-      ],
+      "extends": ["./postgresql-image-names"],
       "versioning": "docker",
       "allowedVersions": "/^18(?:[.-]|$)/"
+    },
+    {
+      "description": "Group updates for PostgreSQL 18 images",
+      "extends": ["./postgresql-image-names"],
+      "matchDatasources": ["docker"],
+      "matchCurrentValue": "/^18(?:[.-]|$)/",
+      "groupName": "PostgreSQL 18",
+      "groupSingleUpdates": true
     }
   ]
 }

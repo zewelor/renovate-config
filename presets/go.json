@@ -5,7 +5,8 @@
     {
       "description": "Group Go toolchain, build image and CI updates",
       "matchDepNames": ["go", "golang", "docker.io/library/golang"],
-      "groupName": "Go toolchain"
+      "groupName": "Go toolchain",
+      "groupSingleUpdates": true
     },
     {
       "description": "Update the minimum Go version in go.mod",
