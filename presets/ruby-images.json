@@ -2,6 +2,25 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "packageRules": [
     {
+      "description": "Group Ruby runtime version and image digest updates",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "ruby",
+        "library/ruby",
+        "docker.io/ruby",
+        "docker.io/library/ruby",
+        "index.docker.io/ruby",
+        "index.docker.io/library/ruby",
+        "registry-1.docker.io/ruby",
+        "registry-1.docker.io/library/ruby",
+        "dhi.io/ruby",
+        "ghcr.io/zewelor/ruby"
+      ],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "groupName": "Ruby",
+      "groupSingleUpdates": true
+    },
+    {
       "description": "Pin Ruby image digests",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["dhi.io/ruby", "ghcr.io/zewelor/ruby"],

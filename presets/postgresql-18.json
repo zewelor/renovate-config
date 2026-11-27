@@ -14,6 +14,8 @@
         "registry-1.docker.io/postgres",
         "registry-1.docker.io/library/postgres"
       ],
+      "groupName": "PostgreSQL",
+      "groupSingleUpdates": true,
       "versioning": "docker",
       "allowedVersions": "/^18(?:[.-]|$)/"
     }

@@ -25,25 +25,37 @@ Independently selectable presets for repositories that adopt this policy:
   by itself verify compatibility with a project's deployment.
 - `nginx-stable` follows the current NGINX Stable line for the Docker Official
   Image `nginx` and Docker Hardened Image `dhi.io/nginx`. Docker versioning
-  preserves each image's tag variant and precision.
+  preserves each image's tag variant and precision. It groups NGINX image
+  updates, including digest refreshes.
 - `postgresql-18` keeps the Docker Official Image `postgres` (and its Docker
   Hub registry aliases) on major version `18` (`/^18(?:[.-]|$)/`) using Docker
-  versioning so each image's tag variant and precision are preserved. Keep
-  automerge, schedule and digest pinning policies in the consuming repository.
+  versioning so each image's tag variant and precision are preserved. It groups
+  PostgreSQL image updates, including digest refreshes. Keep automerge, schedule
+  and digest pinning policies in the consuming repository.
 - `annotations` reads version metadata from comments immediately above
   Dockerfile `ARG`/`ENV` declarations and YAML, TOML or JSON scalars. It extends
   Renovate's `customManagers:dockerfileVersions` for Dockerfiles and adds the
   scalar matcher described below. Keep datasource definitions, schedules and
   automerge rules in separate presets or local configuration. If
   `enabledManagers` is restricted, include `custom.regex`.
-- `ruby-images` pins digests for `dhi.io/ruby` and `ghcr.io/zewelor/ruby`
-  and enables automerge for `digest` and `patch` updates. It does not enable
+- `ruby-images` groups minor, patch and digest updates for official Ruby images,
+  `dhi.io/ruby` and `ghcr.io/zewelor/ruby`, including the Docker dependency
+  extracted by `ruby-version` or a version annotation. It pins digests only for
+  `dhi.io/ruby` and `ghcr.io/zewelor/ruby` and enables automerge for their
+  `digest` and `patch` updates. It does not enable
   automerge for the initial `pinDigest`, minor or major updates; inherited and
   local rules still apply. Automerge uses `branch` as the shared default, so Ruby
   image updates follow the same process across projects. Override it locally
   when a repository has a specific reason to use another method. Keep schedules
   and other project exceptions local. Verify CI for both build and runtime
-  images, including separate updates.
+  images. Use `ruby-version` only when its extraction behavior is needed.
+
+Go, Ruby images, NGINX and PostgreSQL groups keep their group naming even when
+only one update is available (`groupSingleUpdates`). Grouping combines compatible
+updates that Renovate finds in the same run; it does not synchronize release
+availability across registries or override project-specific schedules and
+approval rules. A grouped update requiring manual review can prevent the whole
+group from automerging. Ruby major upgrades remain outside the Ruby group.
 
 ## Using the presets
 
