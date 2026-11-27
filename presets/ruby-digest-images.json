@@ -1,0 +1,9 @@
+{
+  "matchDatasources": [
+    "docker"
+  ],
+  "matchPackageNames": [
+    "dhi.io/ruby",
+    "ghcr.io/zewelor/ruby"
+  ]
+}

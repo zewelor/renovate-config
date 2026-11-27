@@ -15,11 +15,31 @@ const actions = JSON.parse(await readFile(new URL('../presets/github-actions.jso
 const go = JSON.parse(await readFile(new URL('../presets/go.json', import.meta.url)));
 const nginxStable = JSON.parse(await readFile(new URL('../presets/nginx-stable.json', import.meta.url)));
 const postgresql18 = JSON.parse(await readFile(new URL('../presets/postgresql-18.json', import.meta.url)));
-const rubyImages = JSON.parse(await readFile(new URL('../presets/ruby-images.json', import.meta.url)));
+const { presetSources, resolveConfigPresets } = await import(pathToFileURL(`${root}/dist/config/presets/index.js`));
 const rubyVersion = JSON.parse(await readFile(new URL('../presets/ruby-version.json', import.meta.url)));
 const repoConfig = JSON.parse(await readFile(new URL('../.github/renovate.json', import.meta.url)));
 const { extractPackageFile } = await import(pathToFileURL(`${root}/dist/modules/manager/custom/regex/index.js`));
 await init();
+const { config: rubyImages } = await resolveRubyImages();
+async function resolveRubyImages() {
+  const originalLoad = presetSources.github.load;
+  presetSources.github.load = async () => ({
+    getPreset: async ({ repo, presetPath, presetName, tag }) => {
+      assert.equal(repo, 'zewelor/renovate-config');
+      assert.equal(presetPath, 'presets');
+      assert.equal(tag, 'policy-test');
+      assert.ok(['ruby-images', 'ruby-digest-images'].includes(presetName));
+      return JSON.parse(await readFile(new URL(`../presets/${presetName}.json`, import.meta.url)));
+    },
+  });
+  try {
+    const result = await resolveConfigPresets({ extends: ['github>zewelor/renovate-config//presets/ruby-images#policy-test'] });
+    assert.ok(result.visitedPresets.merged.includes('github>zewelor/renovate-config//presets/ruby-digest-images#policy-test'));
+    return result;
+  } finally {
+    presetSources.github.load = originalLoad;
+  }
+}
 const apply = (preset, dep) => applyPackageRules({ automerge: false, ...dep, packageRules: preset.packageRules });
 
 for (const updateType of ['minor', 'patch', 'major']) {
@@ -120,7 +140,7 @@ for (const input of ['ruby-3.4.7\n', '3.4\n', '3.4.7\nother=3.4.7\n']) {
 }
 for (const [preset, group, names] of [
   [nginxStable, 'NGINX', ['nginx', 'library/nginx', 'docker.io/nginx', 'docker.io/library/nginx', 'index.docker.io/nginx', 'index.docker.io/library/nginx', 'registry-1.docker.io/nginx', 'registry-1.docker.io/library/nginx', 'dhi.io/nginx']],
-  [postgresql18, 'PostgreSQL', ['postgres', 'library/postgres', 'docker.io/postgres', 'docker.io/library/postgres', 'index.docker.io/postgres', 'index.docker.io/library/postgres', 'registry-1.docker.io/postgres', 'registry-1.docker.io/library/postgres']],
+  [postgresql18, 'PostgreSQL 18', ['postgres', 'library/postgres', 'docker.io/postgres', 'docker.io/library/postgres', 'index.docker.io/postgres', 'index.docker.io/library/postgres', 'registry-1.docker.io/postgres', 'registry-1.docker.io/library/postgres']],
 ]) {
   for (const packageName of names) {
     for (const updateType of ['digest', 'patch', 'minor']) {

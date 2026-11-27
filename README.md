@@ -30,7 +30,7 @@ Independently selectable presets for repositories that adopt this policy:
 - `postgresql-18` keeps the Docker Official Image `postgres` (and its Docker
   Hub registry aliases) on major version `18` (`/^18(?:[.-]|$)/`) using Docker
   versioning so each image's tag variant and precision are preserved. It groups
-  PostgreSQL image updates, including digest refreshes. Keep automerge, schedule
+  PostgreSQL image updates as `PostgreSQL 18`, including digest refreshes. Keep automerge, schedule
   and digest pinning policies in the consuming repository.
 - `annotations` reads version metadata from comments immediately above
   Dockerfile `ARG`/`ENV` declarations and YAML, TOML or JSON scalars. It extends
@@ -49,6 +49,8 @@ Independently selectable presets for repositories that adopt this policy:
   when a repository has a specific reason to use another method. Keep schedules
   and other project exceptions local. Verify CI for both build and runtime
   images. Use `ruby-version` only when its extraction behavior is needed.
+  The internal `ruby-digest-images` matcher is shared by the grouping, pinning
+  and automerge rules via a relative preset reference.
 
 Go, Ruby images, NGINX and PostgreSQL groups keep their group naming even when
 only one update is available (`groupSingleUpdates`). Grouping combines compatible

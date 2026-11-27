@@ -3,7 +3,7 @@
   "packageRules": [
     {
       "description": "Group Ruby runtime version and image digest updates",
-      "matchDatasources": ["docker"],
+      "extends": ["./ruby-digest-images"],
       "matchPackageNames": [
         "ruby",
         "library/ruby",
@@ -12,9 +12,7 @@
         "index.docker.io/ruby",
         "index.docker.io/library/ruby",
         "registry-1.docker.io/ruby",
-        "registry-1.docker.io/library/ruby",
-        "dhi.io/ruby",
-        "ghcr.io/zewelor/ruby"
+        "registry-1.docker.io/library/ruby"
       ],
       "matchUpdateTypes": ["minor", "patch", "digest"],
       "groupName": "Ruby",
@@ -22,14 +20,12 @@
     },
     {
       "description": "Pin Ruby image digests",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["dhi.io/ruby", "ghcr.io/zewelor/ruby"],
+      "extends": ["./ruby-digest-images"],
       "pinDigests": true
     },
     {
       "description": "Automerge Ruby image digest and patch updates after required checks",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["dhi.io/ruby", "ghcr.io/zewelor/ruby"],
+      "extends": ["./ruby-digest-images"],
       "matchUpdateTypes": ["digest", "patch"],
       "automerge": true,
       "automergeType": "branch"
