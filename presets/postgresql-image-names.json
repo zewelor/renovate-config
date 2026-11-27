@@ -1,0 +1,12 @@
+{
+  "matchPackageNames": [
+    "postgres",
+    "library/postgres",
+    "docker.io/postgres",
+    "docker.io/library/postgres",
+    "index.docker.io/postgres",
+    "index.docker.io/library/postgres",
+    "registry-1.docker.io/postgres",
+    "registry-1.docker.io/library/postgres"
+  ]
+}

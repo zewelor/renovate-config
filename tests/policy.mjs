@@ -14,28 +14,28 @@ const { applyPackageRules } = await import(pathToFileURL(`${root}/dist/util/pack
 const actions = JSON.parse(await readFile(new URL('../presets/github-actions.json', import.meta.url)));
 const go = JSON.parse(await readFile(new URL('../presets/go.json', import.meta.url)));
 const nginxStable = JSON.parse(await readFile(new URL('../presets/nginx-stable.json', import.meta.url)));
-const postgresql18 = JSON.parse(await readFile(new URL('../presets/postgresql-18.json', import.meta.url)));
 const { presetSources, resolveConfigPresets } = await import(pathToFileURL(`${root}/dist/config/presets/index.js`));
 const rubyVersion = JSON.parse(await readFile(new URL('../presets/ruby-version.json', import.meta.url)));
 const repoConfig = JSON.parse(await readFile(new URL('../.github/renovate.json', import.meta.url)));
 const { extractPackageFile } = await import(pathToFileURL(`${root}/dist/modules/manager/custom/regex/index.js`));
 await init();
-const { config: rubyImages } = await resolveRubyImages();
-async function resolveRubyImages() {
+const rubyImages = await resolvePreset('ruby-images', 'ruby-image-names');
+const postgresql18 = await resolvePreset('postgresql-18', 'postgresql-image-names');
+async function resolvePreset(name, matcher) {
   const originalLoad = presetSources.github.load;
   presetSources.github.load = async () => ({
     getPreset: async ({ repo, presetPath, presetName, tag }) => {
       assert.equal(repo, 'zewelor/renovate-config');
       assert.equal(presetPath, 'presets');
       assert.equal(tag, 'policy-test');
-      assert.ok(['ruby-images', 'ruby-digest-images'].includes(presetName));
+      assert.ok([name, matcher].includes(presetName));
       return JSON.parse(await readFile(new URL(`../presets/${presetName}.json`, import.meta.url)));
     },
   });
   try {
-    const result = await resolveConfigPresets({ extends: ['github>zewelor/renovate-config//presets/ruby-images#policy-test'] });
-    assert.ok(result.visitedPresets.merged.includes('github>zewelor/renovate-config//presets/ruby-digest-images#policy-test'));
-    return result;
+    const result = await resolveConfigPresets({ extends: [`github>zewelor/renovate-config//presets/${name}#policy-test`] });
+    assert.ok(result.visitedPresets.merged.includes(`github>zewelor/renovate-config//presets/${matcher}#policy-test`));
+    return result.config;
   } finally {
     presetSources.github.load = originalLoad;
   }
@@ -136,7 +136,8 @@ for (const [preset, group, names] of [
 ]) {
   for (const packageName of names) {
     for (const updateType of ['digest', 'patch', 'minor']) {
-      const result = await apply(preset, { datasource: 'docker', packageName, depName: packageName, updateType });
+      const currentValue = group === 'PostgreSQL 18' ? '18.7-trixie' : '1.30.6-alpine';
+      const result = await apply(preset, { datasource: 'docker', packageName, depName: packageName, currentValue, updateType });
       assert.equal(result.groupName, group, `${packageName} ${updateType}`);
       assert.equal(result.groupSingleUpdates, true);
       assert.equal(result.automerge, false);
@@ -145,8 +146,18 @@ for (const [preset, group, names] of [
     }
   }
   const unrelated = `ghcr.io/example/${names[0]}`;
-  assert.equal((await apply(preset, { datasource: 'docker', packageName: unrelated, depName: unrelated, updateType: 'digest' })).groupName, undefined);
-  assert.equal((await apply(preset, { datasource: 'npm', packageName: names[0], depName: names[0], updateType: 'patch' })).groupName, undefined);
+  const currentValue = group === 'PostgreSQL 18' ? '18-alpine' : '1.30.6-alpine';
+  assert.equal((await apply(preset, { datasource: 'docker', packageName: unrelated, depName: unrelated, currentValue, updateType: 'digest' })).groupName, undefined);
+  assert.equal((await apply(preset, { datasource: 'npm', packageName: names[0], depName: names[0], currentValue, updateType: 'patch' })).groupName, undefined);
+}
+for (const currentValue of ['18', '18-alpine', '18.7', '18.7-trixie']) {
+  const result = await apply(postgresql18, { datasource: 'docker', packageName: 'postgres', depName: 'postgres', currentValue, updateType: 'digest' });
+  assert.equal(result.groupName, 'PostgreSQL 18', currentValue);
+}
+for (const currentValue of ['17', '17.7-alpine', '19', '181-alpine', 'latest', undefined]) {
+  const result = await apply(postgresql18, { datasource: 'docker', packageName: 'postgres', depName: 'postgres', currentValue, updateType: 'digest' });
+  assert.equal(result.groupName, undefined, String(currentValue));
+  assert.equal(result.allowedVersions, '/^18(?:[.-]|$)/', 'keep the version filter independent of grouping');
 }
 const pgRule = await apply(postgresql18, { datasource: 'docker', packageName: 'postgres', depName: 'postgres' });
 assert.equal(pgRule.versioning, 'docker');

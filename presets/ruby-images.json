@@ -3,20 +3,20 @@
   "packageRules": [
     {
       "description": "Group Ruby runtime version and image digest updates",
-      "extends": ["./ruby-digest-images"],
+      "extends": ["./ruby-image-names"],
       "matchUpdateTypes": ["minor", "patch", "digest"],
       "groupName": "Ruby",
       "groupSingleUpdates": true
     },
     {
       "description": "Pin Ruby image digests, not version-only custom declarations",
-      "extends": ["./ruby-digest-images"],
+      "extends": ["./ruby-image-names"],
       "matchManagers": ["!custom.*"],
       "pinDigests": true
     },
     {
       "description": "Automerge Ruby image digest and patch updates after required checks",
-      "extends": ["./ruby-digest-images"],
+      "extends": ["./ruby-image-names"],
       "matchUpdateTypes": ["digest", "patch"],
       "automerge": true,
       "automergeType": "branch"
