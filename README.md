@@ -1,203 +1,72 @@
 # Shared Renovate presets
 
-Independently selectable presets for repositories that adopt this policy:
+Reusable, independently selectable Renovate policies for consistent dependency
+updates across repositories. Keep shared policy here and project-specific
+exceptions in the consuming repository.
 
-- `github-actions` enables automerge for dependencies extracted by the
-  `github-actions` manager as `action`, including major updates. It does not
-  configure how merging is performed or required CI checks.
-- `go` groups the extracted Go module directive, toolchain, Go build images,
-  setup-go and mise declarations named `go`, `golang` or
-  `docker.io/library/golang`; bumps the `go` directive in `go.mod`; and enables
-  `gomodTidy`. This raises a module's minimum supported Go version when the
-  directive is updated. Grouping combines available compatible updates; it
-  does not make all declarations update at the same time.
-- `ruby-version` replaces the built-in `.ruby-version` manager with a custom
-  regex manager for a root-level file containing a numeric `major.minor.patch`
-  version. It looks up `docker.io/library/ruby` using Docker versioning. Check
-  whether availability of that image is an appropriate signal: DHI or custom
-  Ruby images for the same version may not yet be available. Keep any project
-  synchronization workflow and tag exceptions locally. If `enabledManagers`
-  is restricted, include `custom.regex`.
-- `k3s-stable` defines the `custom.k3sStable` datasource from the K3s stable
-  channel and disables minimum release age for it because the channel does not
-  provide release timestamps. Consumers define their own managers, version
-  parsing, schedules and automerge rules. Availability in this channel does not
-  by itself verify compatibility with a project's deployment.
-- `nginx-stable` follows the current NGINX Stable line for the Docker Official
-  Image `nginx` and Docker Hardened Image `dhi.io/nginx`. Docker versioning
-  preserves each image's tag variant and precision. It groups NGINX image
-  updates, including digest refreshes.
-- `postgresql-18` keeps the Docker Official Image `postgres` (and its Docker
-  Hub registry aliases) on major version `18` (`/^18(?:[.-]|$)/`) using Docker
-  versioning so each image's tag variant and precision are preserved. It groups
-  PostgreSQL image updates as `PostgreSQL 18`, including digest refreshes. Keep automerge, schedule
-  and digest pinning policies in the consuming repository.
-- `annotations` reads version metadata from comments immediately above
-  Dockerfile `ARG`/`ENV` declarations and YAML, TOML or JSON scalars. It extends
-  Renovate's `customManagers:dockerfileVersions` for Dockerfiles and adds the
-  scalar matcher described below. Keep datasource definitions, schedules and
-  automerge rules in separate presets or local configuration. If
-  `enabledManagers` is restricted, include `custom.regex`.
-- `ruby-images` groups minor, patch and digest updates for official Ruby images,
-  `dhi.io/ruby` and `ghcr.io/zewelor/ruby`, including the Docker dependency
-  extracted by `ruby-version` or a version annotation. It uses the same image
-  list for digest pinning and automerge of `digest` and `patch` updates.
-  Custom managers are excluded from digest pinning to avoid adding digests to
-  version-only declarations. It does not enable
-  automerge for the initial `pinDigest`, minor or major updates; inherited and
-  local rules still apply. Automerge uses `branch` as the shared default, so Ruby
-  image updates follow the same process across projects. Override it locally
-  when a repository has a specific reason to use another method. Keep schedules
-  and other project exceptions local. Verify CI for both build and runtime
-  images. Use `ruby-version` only when its extraction behavior is needed.
-  The internal `ruby-digest-images` matcher is the single source of image names
-  for grouping, pinning and automerge.
+## Presets
 
-Go, Ruby images, NGINX and PostgreSQL groups keep their group naming even when
-only one update is available (`groupSingleUpdates`). Grouping combines compatible
-updates that Renovate finds in the same run; it does not synchronize release
-availability across registries or override project-specific schedules and
-approval rules. A grouped update requiring manual review can prevent the whole
-group from automerging. Ruby major upgrades remain outside the Ruby group.
+| Preset | Purpose |
+| --- | --- |
+| [github-actions](presets/github-actions.json) | Automerge GitHub Actions updates. |
+| [go](presets/go.json) | Coordinate Go toolchain updates and keep modules tidy. |
+| [ruby-images](presets/ruby-images.json) | Coordinate Ruby version and image updates. |
+| [ruby-version](presets/ruby-version.json) | Track Ruby versions in `.ruby-version` against Docker image releases. |
+| [nginx-stable](presets/nginx-stable.json) | Follow the NGINX Stable release line. |
+| [postgresql-18](presets/postgresql-18.json) | Keep PostgreSQL on major version 18. |
+| [k3s-stable](presets/k3s-stable.json) | Track the K3s stable channel. |
+| [annotations](presets/annotations.json) | Discover versions in annotated configuration files. |
 
-## Using the presets
+The preset files are the source of truth for matching, grouping, and automerge
+behavior.
 
-Select only the applicable presets and keep one repository configuration
-entry point. By default, follow the preset repository's default branch:
+## Usage
+
+Extend only the presets relevant to your project:
 
 ```json
 {
   "extends": [
     "config:recommended",
     "github>zewelor/renovate-config//presets/github-actions",
-    "github>zewelor/renovate-config//presets/go",
-    "github>zewelor/renovate-config//presets/annotations",
-    "github>zewelor/renovate-config//presets/k3s-stable",
-    "github>zewelor/renovate-config//presets/nginx-stable",
-    "github>zewelor/renovate-config//presets/postgresql-18",
-    "github>zewelor/renovate-config//presets/ruby-version",
-    "github>zewelor/renovate-config//presets/ruby-images"
+    "github>zewelor/renovate-config//presets/go"
   ]
 }
 ```
 
-Unpinned references follow the default branch, so preset changes affect
-consumers on subsequent Renovate runs without a preset-version PR in each
-consumer. Review and validate changes before merging them into that branch.
-When a project needs a specific version, append `#<tag>` using a verified
-published tag. Keep release tags immutable and update pinned consumers through
-reviewed Renovate PRs or a deliberate edit. Verify that each consumer resolves
-its chosen reference successfully.
+Unpinned references follow the default branch. Append `#<tag>` to use an
+immutable release. Local rules can override inherited policy.
 
-The former root-level references `github>zewelor/renovate-config:github-actions`
-and `github>zewelor/renovate-config:go` must be changed to the `//presets/`
-paths above when consuming the reorganized default branch. References pinned
-to an earlier tag continue to use the files from that tag.
-
-Presets in `extends` are resolved in order; local settings apply afterwards.
-`packageRules` are mergeable: matching later rules override scalar properties
-from earlier rules, while mergeable options have their own merge semantics. A
-local rule can therefore override automerge for a specific action. Compare the
-resolved configuration and effective rules, including any other inherited
-presets and local rules. Preserve project-specific schedules, release ages,
-automerge policies, pinning and exceptions. Verify repository protections,
-required checks and branch/PR CI triggers before enabling automerge; enabling a
-rule alone does not ensure checks exist or ran. Projects that previously
-allowed non-action workflow dependencies to automerge need an explicit local
-policy for them if that behavior is to remain.
-
-Use `ubuntu-latest` in workflows unless a specific requirement justifies a
-runner exception. CI for Go projects should run `go mod tidy -diff` for each
-module. Neither workflow runner nor CI checks are configured by these presets.
-Do not add version declarations solely to make a group.
-
-## NGINX Stable images
-
-Use a numeric tag with the variant you need. For example, `1.30.6-alpine`
-can update to `1.30.7-alpine` when that tag appears in the same registry.
-A plain `1.30.6` waits for a plain newer tag. Keep registry authentication,
-digest pinning and automerge policy in the consuming repository. Remove the
-old local version filter when adopting the preset.
-
-Renovate in this repository reads the Stable line from the
-[NGINX versions file](https://github.com/nginx/nginx.org/blob/main/xml/versions.xml)
-and opens a PR to update the preset when that line changes. Before merging
-that PR, check that the new line has a published tag for the variants in use.
-Check the [Docker Official Image manifest](https://github.com/docker-library/official-images/blob/master/library/nginx)
-or the [DHI tag log](https://github.com/docker-hardened-images/log/tree/main/dhi/nginx).
-
-## Version annotations
-
-Keep dependency identity and version parsing beside the version:
-
-```dockerfile
-# renovate: datasource=github-releases depName=openai/codex extractVersion=^rust-v(?<version>\d+\.\d+\.\d+)$
-ARG CODEX_VERSION=0.167.0
-```
+For versions not discovered by a native manager, the `annotations` preset
+supports declarations such as:
 
 ```yaml
 # renovate: datasource=docker depName=adguard/adguardhome
 adguardhome_docker_version: "v0.107.79"
 ```
 
-The scalar matcher scans `*.yml`, `*.yaml`, `*.toml`, `*.json`, `*.json5` and
-`*.jsonc`. Put a `# renovate:` or `// renovate:` comment on its own line,
-immediately above the assignment. The required fields are `datasource` and
-`depName`, followed optionally by `versioning` and `extractVersion`, in that
-order. Field values cannot contain whitespace. Keys use letters, digits and
-underscores, optionally quoted; values are unquoted or single/double quoted
-and cannot contain whitespace. JSON comments require a format that permits
-them, such as JSONC devcontainer files. Inline annotations are not supported.
-For Dockerfiles, use `<NAME>_VERSION` variables and the
-[upstream preset's syntax](https://docs.renovatebot.com/presets-customManagers/#custommanagersdockerfileversions).
+For Dockerfiles, use the [upstream annotation syntax](https://docs.renovatebot.com/presets-customManagers/#custommanagersdockerfileversions).
 
-Use `extractVersion` with a named `version` capture when a release tag needs
-normalization. The stored value must already use the normalized form.
-`custom.k3sStable` annotations also need the separate `k3s-stable` preset.
-Remove the local annotation managers when adopting `annotations` so they do
-not extract the same declarations twice. Keep managers with a different
-contract, such as Grafana dashboards or an unannotated Alpine version, local.
+## Operational considerations
+
+- Grouping does not guarantee simultaneous releases across registries.
+- Updating the Go directive can raise the minimum supported Go version.
+- Prefer native Docker image declarations; use custom version managers only
+  when needed. Avoid duplicate extraction and verify image availability when
+  coordinating Ruby versions across registries.
+- Keep CI requirements, registry credentials, schedules and deployment-specific
+  constraints local. Verify required checks before relying on automerge.
+- This repository tracks changes to the NGINX Stable line automatically.
+  Verify that the required image variants are published before merging a new line.
 
 ## Validation
-
-GitHub Actions runs checks on pushes and pull requests. For same-repository
-Renovate PR events initiated by Renovate, the branch push supplies the checks;
-human-initiated PR events still run them. To run the checks locally with a Node
-version supported by the Renovate dependency:
 
 ```sh
 npm ci
 npm test
 ```
 
-The validator checks the presets but does not resolve
-remote references. Run a Renovate extraction dry-run and inspect the resolved
-configuration and logs to verify an `extends` reference; a successful validator
-exit alone is insufficient. The policy tests exercise Renovate's
-package-rule engine for actions, non-actions, Go declarations, Ruby images,
-PostgreSQL 18 candidate filtering and local exceptions, plus Ruby version
-extraction. These tests use a pinned
-Renovate version and its internal rule engine; update the tests when changing
-that version. The K3s test also exercises the channel response transformation.
-The NGINX test exercises the Stable-line update and checks how Docker Compose
-updates resolve with different tags available in the registry.
-The annotation tests resolve the inherited Dockerfile preset and exercise
-file matching, extraction metadata and isolated version replacements through
-Renovate's replacement engine, including CRLF, quoted scalars and unchanged
-unrelated values.
-These focused tests use
-representative dependency metadata rather than running a full bot update.
-Validation is not proof of hosted bot behavior. In each consumer also validate resolved `extends`,
-extract actual dependencies, compare effective policies, exercise version
-replacements and verify CI and required checks. Record hosted bot evidence
-separately. Review existing manager-level automerge and its required checks
-before migrating that policy.
-
-## Ruby image versions in CI
-
-Prefer literal image tags and digests so Renovate's native Dockerfile manager
-can update them. If a host CI job needs the same numeric Ruby version, read it
-from the image tag rather than introducing an ARG and a custom image updater
-solely for that job. Keep the parser local to the consumer's Dockerfile format.
-Matching the Ruby version number does not reproduce the image's operating
-system or native libraries; use container builds and tests for those guarantees.
+CI validates configuration and tests representative Renovate behavior. Before
+adopting or changing a preset, verify the resolved configuration, dependency
+extraction and actual updates in the consuming repository. Passing local tests
+does not establish hosted Renovate behavior.
