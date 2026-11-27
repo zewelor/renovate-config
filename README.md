@@ -40,17 +40,18 @@ Independently selectable presets for repositories that adopt this policy:
   `enabledManagers` is restricted, include `custom.regex`.
 - `ruby-images` groups minor, patch and digest updates for official Ruby images,
   `dhi.io/ruby` and `ghcr.io/zewelor/ruby`, including the Docker dependency
-  extracted by `ruby-version` or a version annotation. It pins digests only for
-  `dhi.io/ruby` and `ghcr.io/zewelor/ruby` and enables automerge for their
-  `digest` and `patch` updates. It does not enable
+  extracted by `ruby-version` or a version annotation. It uses the same image
+  list for digest pinning and automerge of `digest` and `patch` updates.
+  Custom managers are excluded from digest pinning to avoid adding digests to
+  version-only declarations. It does not enable
   automerge for the initial `pinDigest`, minor or major updates; inherited and
   local rules still apply. Automerge uses `branch` as the shared default, so Ruby
   image updates follow the same process across projects. Override it locally
   when a repository has a specific reason to use another method. Keep schedules
   and other project exceptions local. Verify CI for both build and runtime
   images. Use `ruby-version` only when its extraction behavior is needed.
-  The internal `ruby-digest-images` matcher is shared by the grouping, pinning
-  and automerge rules via a relative preset reference.
+  The internal `ruby-digest-images` matcher is the single source of image names
+  for grouping, pinning and automerge.
 
 Go, Ruby images, NGINX and PostgreSQL groups keep their group naming even when
 only one update is available (`groupSingleUpdates`). Grouping combines compatible

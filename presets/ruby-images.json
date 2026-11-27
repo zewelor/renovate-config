@@ -4,23 +4,14 @@
     {
       "description": "Group Ruby runtime version and image digest updates",
       "extends": ["./ruby-digest-images"],
-      "matchPackageNames": [
-        "ruby",
-        "library/ruby",
-        "docker.io/ruby",
-        "docker.io/library/ruby",
-        "index.docker.io/ruby",
-        "index.docker.io/library/ruby",
-        "registry-1.docker.io/ruby",
-        "registry-1.docker.io/library/ruby"
-      ],
       "matchUpdateTypes": ["minor", "patch", "digest"],
       "groupName": "Ruby",
       "groupSingleUpdates": true
     },
     {
-      "description": "Pin Ruby image digests",
+      "description": "Pin Ruby image digests, not version-only custom declarations",
       "extends": ["./ruby-digest-images"],
+      "matchManagers": ["!custom.*"],
       "pinDigests": true
     },
     {

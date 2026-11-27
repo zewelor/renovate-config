@@ -87,9 +87,9 @@ assert.equal((await apply(go, { manager: 'gomod', depType: 'toolchain', depName:
 assert.equal((await apply(go, { manager: 'gomod', depType: 'require', depName: 'example.com/go' })).groupName, undefined);
 const exception = await applyPackageRules({ manager: 'github-actions', depType: 'action', depName: 'actions/checkout', packageName: 'actions/checkout', packageRules: [...actions.packageRules, { matchPackageNames: ['actions/checkout'], automerge: false }] });
 assert.equal(exception.automerge, false, 'a later local exception overrides the preset');
-for (const packageName of ['dhi.io/ruby', 'ghcr.io/zewelor/ruby']) {
+for (const packageName of ['ruby', 'library/ruby', 'docker.io/ruby', 'docker.io/library/ruby', 'index.docker.io/ruby', 'index.docker.io/library/ruby', 'registry-1.docker.io/ruby', 'registry-1.docker.io/library/ruby', 'dhi.io/ruby', 'ghcr.io/zewelor/ruby']) {
   for (const updateType of ['digest', 'pinDigest', 'patch', 'minor', 'major']) {
-    const result = await apply(rubyImages, { datasource: 'docker', packageName, depName: packageName, updateType });
+    const result = await apply(rubyImages, { manager: 'dockerfile', datasource: 'docker', packageName, depName: packageName, updateType });
     assert.equal(result.groupName, ['digest', 'patch', 'minor'].includes(updateType) ? 'Ruby' : undefined, `${packageName} ${updateType} grouping`);
     assert.equal(result.groupSingleUpdates, ['digest', 'patch', 'minor'].includes(updateType) ? true : undefined, `${packageName} ${updateType} single update`);
     assert.equal(result.pinDigests, true, `${packageName} pinning`);
@@ -102,23 +102,13 @@ for (const packageName of ['dhi.io/ruby', 'ghcr.io/zewelor/ruby']) {
   assert.equal(localMergeType.automergeType, 'pr', `${packageName} local merge type exception`);
 }
 for (const dep of [
-  { datasource: 'docker', packageName: 'ghcr.io/zewelor/ruby-other', depName: 'ghcr.io/zewelor/ruby-other' },
+  { manager: 'dockerfile', datasource: 'docker', packageName: 'ghcr.io/zewelor/ruby-other', depName: 'ghcr.io/zewelor/ruby-other' },
   { datasource: 'npm', packageName: 'dhi.io/ruby', depName: 'dhi.io/ruby' },
 ]) {
   const result = await apply(rubyImages, { ...dep, updateType: 'digest' });
   assert.equal(result.automerge, false, JSON.stringify(dep));
   assert.equal(result.pinDigests, undefined, JSON.stringify(dep));
   assert.equal(result.groupName, undefined, JSON.stringify(dep));
-}
-for (const packageName of ['ruby', 'library/ruby', 'docker.io/ruby', 'docker.io/library/ruby', 'index.docker.io/ruby', 'index.docker.io/library/ruby', 'registry-1.docker.io/ruby', 'registry-1.docker.io/library/ruby']) {
-  for (const updateType of ['digest', 'patch', 'minor', 'major', 'pinDigest']) {
-    const result = await apply(rubyImages, { datasource: 'docker', depName: packageName, packageName, updateType });
-    const grouped = ['digest', 'patch', 'minor'].includes(updateType);
-    assert.equal(result.groupName, grouped ? 'Ruby' : undefined, `${packageName} ${updateType}`);
-    assert.equal(result.groupSingleUpdates, grouped ? true : undefined, `${packageName} ${updateType} single update`);
-    assert.equal(result.automerge, false, `${packageName} ${updateType} automerge`);
-    assert.equal(result.pinDigests, undefined, `${packageName} ${updateType} pinning`);
-  }
 }
 const rubyGem = await apply(rubyImages, { manager: 'bundler', datasource: 'rubygems', depName: 'ruby', packageName: 'ruby', updateType: 'minor' });
 assert.equal(rubyGem.groupName, undefined);
@@ -134,6 +124,8 @@ for (const input of ['3.4.7\n', '3.4.7']) {
   const result = await apply(rubyImages, { ...deps[0], packageName: deps[0].depName, manager: 'custom.regex', updateType: 'patch' });
   assert.equal(result.groupName, 'Ruby');
   assert.equal(result.groupSingleUpdates, true);
+  assert.equal(result.pinDigests, undefined, 'version-only regex declarations must not be pinned');
+  assert.equal(result.automerge, true, 'Ruby patch policy applies to the version declaration');
 }
 for (const input of ['ruby-3.4.7\n', '3.4\n', '3.4.7\nother=3.4.7\n']) {
   assert.equal(extractPackageFile(input, '.ruby-version', rubyManager), null, input);
